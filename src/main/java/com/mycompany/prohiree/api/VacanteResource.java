@@ -20,7 +20,6 @@ public class VacanteResource {
             VacanteDAO dao = new VacanteDAO();
             Vacante v = new Vacante();
             
-            // Asignamos los datos usando el modelo real
             v.setId_empresa(Integer.parseInt(datos.get("id_empresa")));
             v.setCargo(datos.get("cargo"));
             v.setSalario(datos.getOrDefault("salario", "A convenir"));
@@ -31,17 +30,20 @@ public class VacanteResource {
 
             if (dao.registrar(v)) {
                 return Response.status(Response.Status.CREATED)
-                               .entity("{\"mensaje\": \"Vacante publicada con éxito\"}")
-                               .build();
+                        .type(MediaType.APPLICATION_JSON)
+                        .entity("{\"mensaje\": \"Vacante publicada con éxito\"}")
+                        .build();
             } else {
                 return Response.status(Response.Status.BAD_REQUEST)
-                               .entity("{\"error\": \"Error al crear vacante. Verifica la base de datos.\"}")
-                               .build();
+                        .type(MediaType.APPLICATION_JSON)
+                        .entity("{\"error\": \"Error al crear vacante. Verifica la base de datos.\"}")
+                        .build();
             }
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                           .entity("{\"error\": \"" + e.getMessage() + "\"}")
-                           .build();
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity("{\"error\": \"" + e.getMessage() + "\"}")
+                    .build();
         }
     }
 
@@ -49,30 +51,50 @@ public class VacanteResource {
     @Path("/all")
     @Produces(MediaType.APPLICATION_JSON)
     public Response listarVacantes() {
-        VacanteDAO dao = new VacanteDAO();
-        List<Vacante> lista = dao.listarTodas();
-        
-        if (!lista.isEmpty()) {
+        try {
+            VacanteDAO dao = new VacanteDAO();
+            List<Vacante> lista = dao.listarTodas();
+            
+            if (lista != null && !lista.isEmpty()) {
+                return Response.status(Response.Status.OK)
+                        .type(MediaType.APPLICATION_JSON)
+                        .entity(lista)
+                        .build();
+            }
             return Response.status(Response.Status.OK)
-                           .entity(lista)
-                           .build();
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity("[]")
+                    .build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity("{\"error\": \"" + e.getMessage() + "\"}")
+                    .build();
         }
-        return Response.status(Response.Status.NO_CONTENT).build();
     }
 
     @DELETE
     @Path("/delete/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response eliminarVacante(@PathParam("id") int id_vacante) {
-        VacanteDAO dao = new VacanteDAO();
-        
-        if (dao.eliminar(id_vacante)) {
-            return Response.status(Response.Status.OK)
-                           .entity("{\"mensaje\": \"Vacante eliminada\"}")
-                           .build();
+        try {
+            VacanteDAO dao = new VacanteDAO();
+            
+            if (dao.eliminar(id_vacante)) {
+                return Response.status(Response.Status.OK)
+                        .type(MediaType.APPLICATION_JSON)
+                        .entity("{\"mensaje\": \"Vacante eliminada\"}")
+                        .build();
+            }
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity("{\"error\": \"Error al eliminar. Verifica que el ID exista.\"}")
+                    .build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity("{\"error\": \"" + e.getMessage() + "\"}")
+                    .build();
         }
-        return Response.status(Response.Status.BAD_REQUEST)
-                       .entity("{\"error\": \"Error al eliminar. Verifica que el ID exista.\"}")
-                       .build();
     }
 }

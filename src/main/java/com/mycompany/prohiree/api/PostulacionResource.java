@@ -11,9 +11,6 @@ import java.util.Map;
 @Path("/postulaciones")
 public class PostulacionResource {
 
-    // ==========================================
-    // 1. APLICAR A UNA VACANTE (POST)
-    // ==========================================
     @POST
     @Path("/apply")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -26,7 +23,7 @@ public class PostulacionResource {
 
             if (dao.verificarPostulacion(idProfesional, idVacante)) {
                 return Response.status(Response.Status.BAD_REQUEST)
-                        .header("Access-Control-Allow-Origin", "*")
+                        .type(MediaType.APPLICATION_JSON)
                         .entity("{\"error\": \"Ya te has postulado a esta vacante anteriormente.\"}")
                         .build();
             }
@@ -37,26 +34,23 @@ public class PostulacionResource {
 
             if (dao.registrarPostulacion(p)) {
                 return Response.status(Response.Status.CREATED)
-                        .header("Access-Control-Allow-Origin", "*")
+                        .type(MediaType.APPLICATION_JSON)
                         .entity("{\"mensaje\": \"Postulación enviada con éxito.\"}")
                         .build();
             } else {
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Access-Control-Allow-Origin", "*")
+                        .type(MediaType.APPLICATION_JSON)
                         .entity("{\"error\": \"No se pudo registrar la postulación.\"}")
                         .build();
             }
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Access-Control-Allow-Origin", "*")
+                    .type(MediaType.APPLICATION_JSON)
                     .entity("{\"error\": \"" + e.getMessage() + "\"}")
                     .build();
         }
     }
 
-    // ==========================================
-    // 2. VER POSTULACIONES DEL PROFESIONAL (GET)
-    // ==========================================
     @GET
     @Path("/profesional/{id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -67,24 +61,20 @@ public class PostulacionResource {
             
             if (lista != null && !lista.isEmpty()) {
                 return Response.status(Response.Status.OK)
-                        .header("Access-Control-Allow-Origin", "*")
+                        .type(MediaType.APPLICATION_JSON)
                         .entity(lista).build();
             }
-            // Retornamos [] seguro para evitar errores JSON en JavaScript
             return Response.status(Response.Status.OK)
-                    .header("Access-Control-Allow-Origin", "*")
+                    .type(MediaType.APPLICATION_JSON)
                     .entity("[]").build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Access-Control-Allow-Origin", "*")
+                    .type(MediaType.APPLICATION_JSON)
                     .entity("{\"error\": \"" + e.getMessage() + "\"}")
                     .build();
         }
     }
 
-    // ==========================================
-    // 3. VER POSTULACIONES POR EMPRESA (GET)
-    // ==========================================
     @GET
     @Path("/empresa/{idEmpresa}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -95,23 +85,20 @@ public class PostulacionResource {
             
             if (lista != null && !lista.isEmpty()) {
                 return Response.status(Response.Status.OK)
-                        .header("Access-Control-Allow-Origin", "*")
+                        .type(MediaType.APPLICATION_JSON)
                         .entity(lista).build();
             }
             return Response.status(Response.Status.OK)
-                    .header("Access-Control-Allow-Origin", "*")
+                    .type(MediaType.APPLICATION_JSON)
                     .entity("[]").build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Access-Control-Allow-Origin", "*")
+                    .type(MediaType.APPLICATION_JSON)
                     .entity("{\"error\": \"" + e.getMessage() + "\"}")
                     .build();
         }
     }
 
-    // ==========================================
-    // 4. ACTUALIZAR ESTADO DE LA POSTULACIÓN (PUT)
-    // ==========================================
     @PUT
     @Path("/updateState")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -124,18 +111,18 @@ public class PostulacionResource {
 
             if (dao.actualizarEstado(idPostulacion, estado)) {
                 return Response.status(Response.Status.OK)
-                        .header("Access-Control-Allow-Origin", "*")
+                        .type(MediaType.APPLICATION_JSON)
                         .entity("{\"mensaje\": \"Estado actualizado a: " + estado + "\"}")
                         .build();
             } else {
                 return Response.status(Response.Status.BAD_REQUEST)
-                        .header("Access-Control-Allow-Origin", "*")
+                        .type(MediaType.APPLICATION_JSON)
                         .entity("{\"error\": \"Error al actualizar el estado.\"}")
                         .build();
             }
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Access-Control-Allow-Origin", "*")
+                    .type(MediaType.APPLICATION_JSON)
                     .entity("{\"error\": \"" + e.getMessage() + "\"}")
                     .build();
         }

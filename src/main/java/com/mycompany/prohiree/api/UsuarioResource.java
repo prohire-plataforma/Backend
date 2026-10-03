@@ -18,10 +18,9 @@ public class UsuarioResource {
         try {
             UsuarioDAO dao = new UsuarioDAO();
             
-            // Validación de seguridad para asegurar que llega el ID
             if (u.getId_usuario() <= 0) {
                 return Response.status(Response.Status.BAD_REQUEST)
-                        .header("Access-Control-Allow-Origin", "*")
+                        .type(MediaType.APPLICATION_JSON)
                         .entity("{\"error\": \"ID de usuario inválido para actualizar.\"}")
                         .build();
             }
@@ -30,21 +29,19 @@ public class UsuarioResource {
 
             if (actualizado) {
                 return Response.status(Response.Status.OK)
-                        .header("Access-Control-Allow-Origin", "*")
-                        .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-                        .header("Access-Control-Allow-Headers", "content-type")
+                        .type(MediaType.APPLICATION_JSON)
                         .entity("{\"mensaje\": \"Perfil y PIN actualizados exitosamente en la base de datos.\"}")
                         .build();
             } else {
                 return Response.status(Response.Status.BAD_REQUEST)
-                        .header("Access-Control-Allow-Origin", "*")
+                        .type(MediaType.APPLICATION_JSON)
                         .entity("{\"error\": \"No se pudo actualizar el perfil del usuario.\"}")
                         .build();
             }
         } catch (Exception e) {
             System.err.println("❌ Error en UsuarioResource /update: " + e.getMessage());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Access-Control-Allow-Origin", "*")
+                    .type(MediaType.APPLICATION_JSON)
                     .entity("{\"error\": \"" + e.getMessage() + "\"}")
                     .build();
         }
@@ -59,12 +56,12 @@ public class UsuarioResource {
             List<Usuario> lista = dao.listarTodos();
             
             return Response.status(Response.Status.OK)
-                    .header("Access-Control-Allow-Origin", "*")
+                    .type(MediaType.APPLICATION_JSON)
                     .entity(lista)
                     .build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Access-Control-Allow-Origin", "*")
+                    .type(MediaType.APPLICATION_JSON)
                     .entity("{\"error\": \"" + e.getMessage() + "\"}")
                     .build();
         }
