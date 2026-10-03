@@ -11,8 +11,30 @@ import java.util.List;
 
 public class UsuarioDAO {
 
-    // 1. Método para REGISTRAR o INSERTAR (Create)
+    // 1. Método para verificar si un email ya existe
+    public boolean existeEmail(String email) {
+        String sql = "SELECT COUNT(*) FROM usuarios WHERE email = ?";
+        try (Connection con = Conexion.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ Error al verificar email: " + e.getMessage());
+        }
+        return false;
+    }
+
+    // 2. Método para REGISTRAR o INSERTAR (Create) con validación de duplicados
     public boolean registrar(Usuario u) {
+        // Evita que se creen cuentas con el mismo correo
+        if (existeEmail(u.getEmail())) {
+            System.err.println("❌ Error: El correo ya está registrado.");
+            return false;
+        }
+
         String sql = "INSERT INTO usuarios (nombre, email, password, rol, profesion, telefono, ruta_cv, cv_documento, pin_seguridad, foto_perfil) VALUES (?,?,?,?,?,?,?,?,?,?)";
         try (Connection con = Conexion.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -37,7 +59,7 @@ public class UsuarioDAO {
         }
     }
 
-    // 2. Método para VALIDAR EL LOGIN (Read)
+    // 3. Método para VALIDAR EL LOGIN (Read)
     public Usuario validar(String email, String pass) {
         String sql = "SELECT * FROM usuarios WHERE email = ? AND password = ?";
         try (Connection con = Conexion.getConnection();
@@ -68,20 +90,37 @@ public class UsuarioDAO {
         return null;
     }
 
-    // 3. Método para ACTUALIZAR EL PERFIL
+    // 4. Método para ACTUALIZAR EL PERFIL (Actualizado para incluir nombre, PIN y proteger contraseña vacía)
     public boolean actualizarPerfil(Usuario u) {
-        String sql = "UPDATE usuarios SET email = ?, password = ?, profesion = ?, telefono = ?, ruta_cv = ?, cv_documento = ?, foto_perfil = ? WHERE id_usuario = ?";
+        boolean cambiarPassword = (u.getPassword() != null && !u.getPassword().trim().isEmpty());
+        
+        String sql;
+        if (cambiarPassword) {
+            // Si el usuario escribió una contraseña nueva, la actualizamos junto con el nombre, email, profesion, telefono, pin y archivos
+            sql = "UPDATE usuarios SET nombre = ?, email = ?, password = ?, profesion = ?, telefono = ?, pin_seguridad = ?, ruta_cv = ?, cv_documento = ?, foto_perfil = ? WHERE id_usuario = ?";
+        } else {
+            // Si la dejó en blanco, mantenemos la contraseña anterior intacta y actualizamos el resto
+            sql = "UPDATE usuarios SET nombre = ?, email = ?, profesion = ?, telefono = ?, pin_seguridad = ?, ruta_cv = ?, cv_documento = ?, foto_perfil = ? WHERE id_usuario = ?";
+        }
+
         try (Connection con = Conexion.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             
-            ps.setString(1, u.getEmail());
-            ps.setString(2, u.getPassword());
-            ps.setString(3, u.getProfesion());
-            ps.setString(4, u.getTelefono());
-            ps.setString(5, u.getRuta_cv());
-            ps.setString(6, u.getCv_documento()); 
-            ps.setString(7, u.getFoto_perfil());  
-            ps.setInt(8, u.getId_usuario());
+            int index = 1;
+            ps.setString(index++, u.getNombre());
+            ps.setString(index++, u.getEmail());
+            
+            if (cambiarPassword) {
+                ps.setString(index++, u.getPassword());
+            }
+            
+            ps.setString(index++, u.getProfesion());
+            ps.setString(index++, u.getTelefono());
+            ps.setString(index++, u.getPin_seguridad());
+            ps.setString(index++, u.getRuta_cv() != null ? u.getRuta_cv() : "");
+            ps.setString(index++, u.getCv_documento() != null ? u.getCv_documento() : "");
+            ps.setString(index++, u.getFoto_perfil() != null ? u.getFoto_perfil() : "");
+            ps.setInt(index, u.getId_usuario());
 
             return ps.executeUpdate() > 0;
             
@@ -92,7 +131,7 @@ public class UsuarioDAO {
         }
     }
 
-    // 4. Método para ELIMINAR (Delete)
+    // 5. Método para ELIMINAR (Delete)
     public boolean eliminar(int id_usuario) {
         String sql = "DELETE FROM usuarios WHERE id_usuario=?";
         try (Connection con = Conexion.getConnection();
@@ -108,7 +147,7 @@ public class UsuarioDAO {
         }
     }
 
-    // 5. Método para LISTAR TODOS (Read / GET)
+    // 6. Método para LISTAR TODOS (Read / GET)
     public List<Usuario> listarTodos() {
         List<Usuario> lista = new ArrayList<>();
         String sql = "SELECT * FROM usuarios";

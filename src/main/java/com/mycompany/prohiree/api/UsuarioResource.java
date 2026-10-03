@@ -18,12 +18,22 @@ public class UsuarioResource {
         try {
             UsuarioDAO dao = new UsuarioDAO();
             
-            if (dao.actualizarPerfil(u)) {
+            // Validación de seguridad para asegurar que llega el ID
+            if (u.getId_usuario() <= 0) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .header("Access-Control-Allow-Origin", "*")
+                        .entity("{\"error\": \"ID de usuario inválido para actualizar.\"}")
+                        .build();
+            }
+
+            boolean actualizado = dao.actualizarPerfil(u);
+
+            if (actualizado) {
                 return Response.status(Response.Status.OK)
                         .header("Access-Control-Allow-Origin", "*")
                         .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
                         .header("Access-Control-Allow-Headers", "content-type")
-                        .entity("{\"mensaje\": \"Perfil actualizado exitosamente en la base de datos.\"}")
+                        .entity("{\"mensaje\": \"Perfil y PIN actualizados exitosamente en la base de datos.\"}")
                         .build();
             } else {
                 return Response.status(Response.Status.BAD_REQUEST)
@@ -32,6 +42,7 @@ public class UsuarioResource {
                         .build();
             }
         } catch (Exception e) {
+            System.err.println("❌ Error en UsuarioResource /update: " + e.getMessage());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .header("Access-Control-Allow-Origin", "*")
                     .entity("{\"error\": \"" + e.getMessage() + "\"}")
@@ -43,13 +54,19 @@ public class UsuarioResource {
     @Path("/all")
     @Produces(MediaType.APPLICATION_JSON)
     public Response listarUsuarios() {
-        UsuarioDAO dao = new UsuarioDAO();
-        List<Usuario> lista = dao.listarTodos();
-        
-        // Retornamos siempre estado 200 con la lista (aunque esté vacía []) para evitar errores en JS
-        return Response.status(Response.Status.OK)
-                .header("Access-Control-Allow-Origin", "*")
-                .entity(lista)
-                .build();
+        try {
+            UsuarioDAO dao = new UsuarioDAO();
+            List<Usuario> lista = dao.listarTodos();
+            
+            return Response.status(Response.Status.OK)
+                    .header("Access-Control-Allow-Origin", "*")
+                    .entity(lista)
+                    .build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .header("Access-Control-Allow-Origin", "*")
+                    .entity("{\"error\": \"" + e.getMessage() + "\"}")
+                    .build();
+        }
     }
 }
