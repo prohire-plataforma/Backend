@@ -6,14 +6,27 @@ import java.sql.SQLException;
 
 public class DatabaseConnection {
 
-    private static final String URL = "jdbc:mysql://yamanote.proxy.rlwy.net:42605/railway?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
-    private static final String USER = "root";
-    private static final String PASSWORD = "CGenshPoelEeJjJwzebIuOXfKTULhbZc"; // Con 'u' minúscula
-
     public static Connection getConnection() throws SQLException {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            return DriverManager.getConnection(URL, USER, PASSWORD);
+
+            // Lectura de variables de entorno de Railway
+            String host = System.getenv("MYSQLHOST");
+            String port = System.getenv("MYSQLPORT");
+            String db = System.getenv("MYSQLDATABASE");
+            String user = System.getenv("MYSQLUSER");
+            String password = System.getenv("MYSQLPASSWORD");
+
+            // Valores por defecto para pruebas locales en NetBeans
+            if (host == null) host = "localhost";
+            if (port == null) port = "3306";
+            if (db == null) db = "prohire_db";
+            if (user == null) user = "root";
+            if (password == null) password = "";
+
+            String url = "jdbc:mysql://" + host + ":" + port + "/" + db + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+
+            return DriverManager.getConnection(url, user, password);
         } catch (ClassNotFoundException e) {
             throw new SQLException("Error: El driver de MySQL no está configurado correctamente.", e);
         }
