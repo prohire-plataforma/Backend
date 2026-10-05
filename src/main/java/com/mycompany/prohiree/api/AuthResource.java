@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.Response;
 @Path("/auth")
 public class AuthResource {
 
+    // Clase auxiliar para recibir el email y password desde el frontend
     public static class LoginRequest {
         private String email;
         private String password;
@@ -25,26 +26,25 @@ public class AuthResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response login(LoginRequest credenciales) {
         try {
+            // Usamos el DAO que ya arreglamos para validar en la base de datos
             UsuarioDAO dao = new UsuarioDAO();
             Usuario usuarioValidado = dao.validar(credenciales.getEmail(), credenciales.getPassword());
 
             if (usuarioValidado != null) {
+                // Si el usuario existe, devolvemos el objeto COMPLETO (con ID, nombre, fotos, etc.)
                 return Response.status(Response.Status.OK)
-                        .type(MediaType.APPLICATION_JSON)
-                        .entity(usuarioValidado)
-                        .build();
+                               .entity(usuarioValidado)
+                               .build();
             } else {
                 return Response.status(Response.Status.UNAUTHORIZED)
-                        .type(MediaType.APPLICATION_JSON)
-                        .entity("{\"error\": \"Credenciales inválidas\"}")
-                        .build();
+                               .entity("{\"error\": \"Credenciales inválidas\"}")
+                               .build();
             }
         } catch (Exception e) {
             e.printStackTrace();
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity("{\"error\": \"Error en servidor: " + e.getMessage() + "\"}")
-                    .build();
+                           .entity("{\"error\": \"Error en servidor: " + e.getMessage() + "\"}")
+                           .build();
         }
     }
 
@@ -54,25 +54,23 @@ public class AuthResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response registro(Usuario nuevoUsuario) {
         try {
+            // Usamos el DAO para guardar el usuario con su PIN de seguridad
             UsuarioDAO dao = new UsuarioDAO();
             
             if (dao.registrar(nuevoUsuario)) {
                 return Response.status(Response.Status.CREATED)
-                        .type(MediaType.APPLICATION_JSON)
-                        .entity("{\"mensaje\": \"Registro exitoso\"}")
-                        .build();
+                               .entity("{\"mensaje\": \"Registro exitoso\"}")
+                               .build();
             } else {
                 return Response.status(Response.Status.BAD_REQUEST)
-                        .type(MediaType.APPLICATION_JSON)
-                        .entity("{\"error\": \"No se pudo registrar el usuario. El correo podría ya existir.\"}")
-                        .build();
+                               .entity("{\"error\": \"No se pudo registrar el usuario. El correo podría ya existir.\"}")
+                               .build();
             }
         } catch (Exception e) {
             e.printStackTrace();
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity("{\"error\": \"Error en servidor: " + e.getMessage() + "\"}")
-                    .build();
+                           .entity("{\"error\": \"Error en servidor: " + e.getMessage() + "\"}")
+                           .build();
         }
     }
 }
