@@ -64,7 +64,7 @@ public class VacanteDAO {
         return listarTodas();
     }
 
-    // 3. Listar vacantes específicas por ID de empresa (Requerido por dashboard_empresa.jsp)
+    // 3. Listar vacantes específicas por ID de empresa
     public List<Vacante> listarPorEmpresa(int id_empresa) {
         List<Vacante> lista = new ArrayList<>();
         String sql = "SELECT * FROM vacantes WHERE id_empresa = ?";
@@ -92,18 +92,51 @@ public class VacanteDAO {
         return lista;
     }
 
-    // 4. Eliminar Vacante
+    // 4. Eliminar Vacante (Con borrado en cascada manual transaccional para limpiar postulaciones)
     public boolean eliminar(int id_vacante) {
-        String sql = "DELETE FROM vacantes WHERE id_vacante=?";
-        try (Connection con = Conexion.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            
-            ps.setInt(1, id_vacante);
-            return ps.executeUpdate() > 0;
-            
+        String sqlPostulaciones = "DELETE FROM postulaciones WHERE id_vacante = ?";
+        String sqlVacante = "DELETE FROM vacantes WHERE id_vacante = ?";
+        
+        Connection con = null;
+        try {
+            con = Conexion.getConnection();
+            con.setAutoCommit(false); // Iniciamos transacción
+
+            // Paso 1: Eliminar las postulaciones asociadas a esta vacante
+            try (PreparedStatement psPost = con.prepareStatement(sqlPostulaciones)) {
+                psPost.setInt(1, id_vacante);
+                psPost.executeUpdate();
+            }
+
+            // Paso 2: Eliminar la vacante
+            int filasAfectadas = 0;
+            try (PreparedStatement psVac = con.prepareStatement(sqlVacante)) {
+                psVac.setInt(1, id_vacante);
+                filasAfectadas = psVac.executeUpdate();
+            }
+
+            con.commit(); // Confirmamos los cambios si todo salió bien
+            return filasAfectadas > 0;
+
         } catch (SQLException e) {
+            if (con != null) {
+                try {
+                    con.rollback(); // Si ocurre un error, revertimos todo
+                } catch (SQLException ex) {
+                    System.err.println("❌ Error en rollback: " + ex.getMessage());
+                }
+            }
             System.err.println("❌ Error DAO Vacante (Eliminar): " + e.getMessage());
             return false;
+        } finally {
+            if (con != null) {
+                try {
+                    con.setAutoCommit(true);
+                    con.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }
